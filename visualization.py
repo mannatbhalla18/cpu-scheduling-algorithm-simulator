@@ -1,29 +1,55 @@
 import matplotlib.pyplot as plt
-import random
+import numpy as np
+
+# Fixed colors for processes
+process_colors = {
+    "P1": "#1f77b4",
+    "P2": "#ff7f0e",
+    "P3": "#2ca02c",
+    "P4": "#d62728",
+    "P5": "#9467bd",
+    "P6": "#8c564b",
+    "P7": "#e377c2"
+}
 
 
-def plot_all_gantt(fcfs_timeline, sjf_timeline, rr_timeline):
-    fig, axs = plt.subplots(3, 1, figsize=(12, 6), sharex=True)
+def plot_full_dashboard(fcfs_timeline, sjf_timeline, rr_timeline,
+                        fcfs_avg, sjf_avg, rr_avg):
 
-    algorithms = [
-        ("FCFS", fcfs_timeline),
-        ("SJF", sjf_timeline),
-        ("Round Robin", rr_timeline)
-    ]
+    fig = plt.figure(figsize=(14, 10))
 
-    for ax, (title, timeline) in zip(axs, algorithms):
-        process_colors = {}
+    # ---------- BAR GRAPH ----------
+    ax_bar = plt.subplot2grid((4, 1), (0, 0))
 
-        for entry in timeline:
-            pid = entry[0]
-            if pid not in process_colors:
-                process_colors[pid] = (random.random(), random.random(), random.random())
+    labels = ["Waiting Time (avg)", "Turnaround Time (avg)", "CPU Utilization (%)"]
+    x = np.arange(len(labels))
+    width = 0.25
 
-        for entry in timeline:
-            pid, start, end = entry
+    ax_bar.bar(x - width, fcfs_avg, width, label="FCFS")
+    ax_bar.bar(x, sjf_avg, width, label="SJF")
+    ax_bar.bar(x + width, rr_avg, width, label="Round Robin")
+
+    ax_bar.set_title("Algorithm Performance Comparison")
+    ax_bar.set_xticks(x)
+    ax_bar.set_xticklabels(labels)
+    ax_bar.legend()
+    ax_bar.grid(True)
+
+    # ---------- Compute max timeline length ----------
+    max_time = max(
+        max(end for _, _, end in fcfs_timeline),
+        max(end for _, _, end in sjf_timeline),
+        max(end for _, _, end in rr_timeline)
+    )
+
+    # ---------- GANTT DRAW FUNCTION ----------
+    def draw_gantt(ax, timeline, title):
+
+        for pid, start, end in timeline:
             ax.broken_barh([(start, end - start)], (10, 8),
-                           facecolors=process_colors[pid])
-            ax.text(start + (end - start)/2,
+                           facecolors=process_colors.get(pid, "#999999"))
+
+            ax.text(start + (end - start) / 2,
                     14,
                     pid,
                     ha='center',
@@ -33,54 +59,24 @@ def plot_all_gantt(fcfs_timeline, sjf_timeline, rr_timeline):
 
         ax.set_yticks([])
         ax.set_title(title)
+        ax.set_xlim(0, max_time)
         ax.grid(True)
 
-    axs[-1].set_xlabel("Time")
+    # ---------- GANTT CHARTS ----------
+    ax_fcfs = plt.subplot2grid((4, 1), (1, 0))
+    draw_gantt(ax_fcfs, fcfs_timeline, "FCFS")
+
+    ax_sjf = plt.subplot2grid((4, 1), (2, 0))
+    draw_gantt(ax_sjf, sjf_timeline, "SJF")
+
+    ax_rr = plt.subplot2grid((4, 1), (3, 0))
+    draw_gantt(ax_rr, rr_timeline, "Round Robin")
+
+    ax_rr.set_xlabel("Time")
 
     plt.tight_layout()
-    plt.show()
 
-def plot_comparison_bar(fcfs_avg, sjf_avg, rr_avg):
-    import matplotlib.pyplot as plt
-    import numpy as np
+    # Save dashboard image automatically
+    plt.savefig("scheduler_dashboard.png", dpi=300)
 
-    labels = ["Waiting Time", "Turnaround Time", "CPU Utilization"]
-
-    fcfs = fcfs_avg
-    sjf = sjf_avg
-    rr = rr_avg
-
-    x = np.arange(len(labels))
-    width = 0.25
-
-    fig, ax = plt.subplots(figsize=(10, 5))
-
-    ax.bar(x - width, fcfs, width, label="FCFS")
-    ax.bar(x, sjf, width, label="SJF")
-    ax.bar(x + width, rr, width, label="Round Robin")
-
-    ax.set_ylabel("Values")
-    ax.set_title("Algorithm Performance Comparison")
-    ax.set_xticks(x)
-    ax.set_xticklabels(labels)
-    ax.legend()
-
-    plt.tight_layout()
-    plt.show()
-    
-def plot_scalability(process_counts, fcfs_wait, sjf_wait, rr_wait):
-    import matplotlib.pyplot as plt
-
-    plt.figure(figsize=(8,5))
-
-    plt.plot(process_counts, fcfs_wait, marker='o', label="FCFS")
-    plt.plot(process_counts, sjf_wait, marker='o', label="SJF")
-    plt.plot(process_counts, rr_wait, marker='o', label="Round Robin")
-
-    plt.xlabel("Number of Processes")
-    plt.ylabel("Average Waiting Time")
-    plt.title("Scalability Analysis")
-    plt.legend()
-
-    plt.tight_layout()
     plt.show()

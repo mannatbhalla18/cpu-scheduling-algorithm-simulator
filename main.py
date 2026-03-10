@@ -1,7 +1,7 @@
 import random
 from process import Process
 from scheduler import fcfs_schedule, sjf_schedule, round_robin_schedule
-from visualization import plot_all_gantt, plot_comparison_bar
+from visualization import plot_full_dashboard
 
 def clone_processes(processes):
     return [
@@ -120,9 +120,12 @@ def main():
     sjf_avg = [sjf_total[i] / runs for i in range(3)]
     rr_avg = [rr_total[i] / runs for i in range(3)]
 
-    plot_comparison_bar(fcfs_avg, sjf_avg, rr_avg)
-    # ---------------- Show Gantt Charts ----------------
-    plot_all_gantt(fcfs_timeline, sjf_timeline, rr_timeline)
+    plot_full_dashboard(fcfs_timeline,
+                    sjf_timeline,
+                    rr_timeline,
+                    fcfs_avg,
+                    sjf_avg,
+                    rr_avg)
 
 if __name__ == "__main__":
     main()
